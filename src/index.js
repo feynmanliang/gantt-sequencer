@@ -1,4 +1,10 @@
 // `data` provided by data.js
+import * as d3 from 'd3';
+import 'd3-selection-multi';
+import moment from 'moment';
+import * as _ from 'lodash';
+
+import data from './data';
 
 const width = self.frameElement ? 800 : innerWidth;
 const height = self.frameElement ? 500 : innerWidth;
@@ -28,7 +34,7 @@ svg.append('g')
   .call(xAxis);
 
 const yAxis = d3.axisLeft(y)
-  .tickFormat(milestoneId => _(data).find(x => x.id === milestoneId).title);
+  .tickFormat(milestoneId => _.find(data, x => x.id === milestoneId).title);
 svg.append('g')
   .attr("transform", `translate(${x.range()[0]}, 0)`)
   .call(yAxis);
