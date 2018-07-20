@@ -1,52 +1,63 @@
+// import milestones from './milestones.json';
+// const data = milestones
+//   .map(d => ({
+//     id: d._id,
+//     title: d.title,
+//     startDate: new Date(d.startDate),
+//     endDate: new Date(d.endDate),
+//     editable: !d.delivery.readyDate,
+//   }))
+//   .sort((a,b) => a.startDate - b.startDate)
+//   .map((d,i) => ({
+//     ...d,
+//     index: i,
+//   }));
+
 let data = [
   {
-    "_id": "5876b67c4323bd1c00f711a1",
-    "title": "Setup, Design & Requirements",
-    "startDate": "2017-01-17T19:09:55.951Z",
-    "endDate": "2017-01-31T12:00:00.951Z",
+    "id": "5ac43b0b8d99930022d82573",
+    "title": "Scoping & M1 Review",
+    "startDate": "2018-04-04T02:40:18.174Z",
+    "endDate": "2018-05-28T16:00:00.000Z",
+    "editable": false,
     "index": 0
   },
   {
-    "_id": "587e6c14f79ff72e00262dcf",
-    "title": "TBD",
-    "startDate": "2017-01-31T12:00:00.951Z",
-    "endDate": "2017-02-14T12:00:00.951Z",
+    "id": "5ac690581f26bd002207cea2",
+    "title": "Design",
+    "startDate": "2018-05-28T16:00:00.000Z",
+    "endDate": "2018-06-17T16:00:00.000Z",
+    "editable": false,
     "index": 1
   },
   {
-    "_id": "587e6c14f79ff72e00262dd0",
-    "title": "TBD",
-    "startDate": "2017-02-14T12:00:00.951Z",
-    "endDate": "2017-02-28T12:00:00.951Z",
+    "id": "5ac6905f0b378000224f369d",
+    "title": "Design & Development 1/2",
+    "startDate": "2018-06-17T16:00:00.000Z",
+    "endDate": "2018-06-28T16:00:00.000Z",
+    "editable": false,
     "index": 2
   },
   {
-    "_id": "587e6c14f79ff72e00262dd1",
-    "title": "TBD",
-    "startDate": "2017-02-28T12:00:00.951Z",
-    "endDate": "2017-03-14T12:00:00.951Z",
+    "id": "5ac690661f26bd002207ced0",
+    "title": "Design & Development 2/2",
+    "startDate": "2018-06-28T16:00:00.000Z",
+    "endDate": "2018-07-20T16:00:00.000Z",
+    "editable": true,
     "index": 3
   },
   {
-    "_id": "587e6c14f79ff72e00262dd2",
-    "title": "Polish and Bug Fixes",
-    "startDate": "2017-03-14T12:00:00.951Z",
-    "endDate": "2017-03-21T12:00:00.951Z",
+    "id": "5ac6906c7f8c05001c676591",
+    "title": "Development & Documentation ",
+    "startDate": "2018-07-20T16:00:00.000Z",
+    "endDate": "2018-07-29T16:00:00.000Z",
+    "editable": true,
     "index": 4
   }
-];
-
-data = data
-  .map(d => ({
-    id: d._id,
-    title: d.title,
-    startDate: new Date(d.startDate),
-    endDate: new Date(d.endDate),
-  }))
-  .sort((a,b) => a.startDate - b.startDate)
-  .map((d,i) => ({
-    ...d,
-    index: i,
-  }));
+].map(d => ({
+  ...d,
+  startDate: new Date(d.startDate),
+  endDate: new Date(d.endDate),
+}));
 
 export default data;
