@@ -13,18 +13,26 @@ const x = d3.scaleTime()
     d3.min(data.map((x) => x.startDate)),
     d3.max(data.map((x) => x.endDate))
   ])
-  .range([100, 700]);
+  .range([150, 700]);
 
 const y = d3.scaleBand()
-  .rangeRound([100, 400])
-  .domain(data.map(d => d.id));
+  .domain(data.map(d => d.id))
+  .rangeRound([50, 400]);
+
 
 const xAxis = d3.axisBottom(x)
-  .ticks(10);
-
+  .ticks(d3.timeWeek.every(1))
+  .tickFormat(d3.timeFormat('%a %b %d'));
 svg.append('g')
-  .attr("transform", "translate(0, 400)")
+  .attr("transform", `translate(0, ${y.range()[1]})`)
   .call(xAxis);
+
+const yAxis = d3.axisLeft(y)
+  .tickFormat(milestoneId => _(data).find(x => x.id === milestoneId).title);
+svg.append('g')
+  .attr("transform", `translate(${x.range()[0]}, 0)`)
+  .call(yAxis);
+
 
 const bars = svg.selectAll('rect')
   .data(data);
@@ -32,7 +40,7 @@ bars.enter().append('rect')
   .attrs({
     x: (d) => x(d.startDate),
     y: (d) => y(d.id),
-    height: 10,
+    height: y.bandwidth(),
     width: (d) => x(d.endDate) - x(d.startDate),
     milestoneId: d => d.id,
   })
@@ -56,7 +64,7 @@ lines.enter()
           });
         // adjust previous milestone bar's end position
         d3.selectAll(`rect[milestoneId='${milestoneId}']`)
-          .attr('width', d3.event.x - x(d.startDate))
+          .attr('width', d3.event.x - x(d.startDate));
 
         // move all future milestone dates
         const delta = d3.event.x - x(d.endDate)
@@ -78,7 +86,7 @@ lines.enter()
           milestoneIndex += 1;
         }
       } else {
-        console.log("Milestones cannot be shorter than 1 day")
+        console.error("Milestones cannot be shorter than 1 day")
       }
     })
     .on('end', function (d) {
@@ -104,9 +112,9 @@ lines.enter()
   )
   .attrs({
     x1: d => x(d.endDate),
-    y1: 0,
+    y1: y.range()[0],
     x2: d => x(d.endDate),
-    y2: 400,
+    y2: y.range()[1],
     "stroke-width": 3,
     "stroke-dasharray": "10,10",
     stroke: "black",
