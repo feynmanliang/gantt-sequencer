@@ -57,7 +57,7 @@ function updateAxes(data) {
     .ticks(6)
     .tickFormat(d3.timeFormat('%a %b %d'));
 
-  svg.selectAll('g.xAxis')
+  svg.selectAll('.xAxis')
     .attrs({
       transform: `translate(0, ${y.range()[1]})`,
     })
@@ -67,7 +67,7 @@ function updateAxes(data) {
   const yAxis = d3.axisLeft(y)
     .tickFormat(milestoneId => _.find(data, x => x.id === milestoneId).title);
 
-  svg.selectAll('g.yAxis')
+  svg.selectAll('.yAxis')
     .attrs({
       transform: `translate(${x.range()[0]}, 0)`,
     })
@@ -79,7 +79,7 @@ function updateAxes(data) {
 
 function updateBars(data, x, y) {
   // JOIN
-  const bars = svg.selectAll('rect.milestoneBar')
+  const bars = svg.selectAll('.milestoneBar')
     .data(data);
 
   // ENTER + UPDATE
@@ -103,33 +103,46 @@ function updateBars(data, x, y) {
 
 function updateLines(data, x, y) {
   // JOIN
-  const lines = svg.selectAll("line.endLine")
+  const lines = svg.selectAll(".endLine")
     .data(data);
 
   // ENTER + UPDATE
   lines.enter()
     .append("line")
   .merge(lines)
+    .classed('endLine', true)
+    .classed('editable', d => d.editable)
+    .transition()
+      .attrs(d => ({
+        x1: x(d.endDate),
+        y1: y.range()[0],
+        x2: x(d.endDate),
+        y2: y.range()[1],
+        milestoneId: d.id,
+      }));
+
+  // Attach drag handlers
+  svg.selectAll(".endLine.editable")
     .call(d3.drag()
       .on('drag', function (d) {
         const milestoneId = d3.select(this).attr('milestoneId');
 
         if (moment(x.invert(d3.event.x) - d.startDate) >= moment.duration(1, 'day')) {
           // adjust line position
-          d3.selectAll(`line[milestoneId='${milestoneId}']`)
+          d3.selectAll(`.endLine[milestoneId='${milestoneId}']`)
             .attrs({
               x1: d3.event.x,
               x2: d3.event.x
             });
           // adjust line label
-          d3.selectAll(`text[milestoneId='${milestoneId}']`)
+          d3.selectAll(`.endLineLabel[milestoneId='${milestoneId}']`)
             .attrs({
               x: d3.event.x,
             })
             .text(d => moment(x.invert(d3.event.x)).format('ddd MMM D'));
 
           // adjust previous milestone bar's end position
-          d3.selectAll(`rect[milestoneId='${milestoneId}']`)
+          d3.selectAll(`.milestoneBar[milestoneId='${milestoneId}']`)
             .attrs({
               width: d3.event.x - x(d.startDate)
             });
@@ -141,17 +154,17 @@ function updateLines(data, x, y) {
             .indexOf(milestoneId);
           while (milestoneIndex + 1 < data.length) {
             const nextMilestone = data[milestoneIndex + 1];
-            d3.selectAll(`line[milestoneId='${nextMilestone.id}']`)
+            d3.selectAll(`.endLine[milestoneId='${nextMilestone.id}']`)
               .attrs({
                 x1: x(nextMilestone.endDate) + delta,
                 x2: x(nextMilestone.endDate) + delta,
               });
-            d3.selectAll(`text[milestoneId='${nextMilestone.id}']`)
+            d3.selectAll(`.endLineLabel[milestoneId='${nextMilestone.id}']`)
               .attrs({
                 x: x(nextMilestone.endDate) + delta,
               })
               .text(d => moment(x.invert(x(nextMilestone.endDate) + delta)).format('ddd MMM D'));
-            d3.selectAll(`rect[milestoneId='${nextMilestone.id}']`)
+            d3.selectAll(`.milestoneBar[milestoneId='${nextMilestone.id}']`)
               .attrs({
                 x: x(nextMilestone.startDate) + delta,
               });
@@ -186,16 +199,6 @@ function updateLines(data, x, y) {
         update(data);
       })
     )
-    .classed('endLine', true)
-    .classed('editable', d => d.editable)
-    .transition()
-      .attrs(d => ({
-        x1: x(d.endDate),
-        y1: y.range()[0],
-        x2: x(d.endDate),
-        y2: y.range()[1],
-        milestoneId: d.id,
-      }));
 
   // EXIT
   lines.exit().remove();
