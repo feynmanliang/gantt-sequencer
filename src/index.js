@@ -1,15 +1,20 @@
 import 'bootstrap'
+import 'bootstrap/dist/css/bootstrap.min.css';
+
 import * as d3 from 'd3';
 import 'd3-selection-multi';
 import _ from 'lodash';
 import moment from 'moment';
 import uuidv4 from 'uuid/v4';
 
-import data from './data';
+import milestones from './data';
 import './styles/viz.css';
+
+let data = _.cloneDeep(milestones);
 
 window.exportData = () => console.log(data);
 window.addMilestone = () => {
+  console.log(data)
   const newIndex = data.length;
   const startDate = _(data).map(ms => ms.endDate).max();
   data.push({
@@ -19,6 +24,7 @@ window.addMilestone = () => {
     endDate: moment(startDate) + moment.duration(7, 'day'),
     editable: true,
   });
+  console.log(data)
   update(data);
 }
 
@@ -34,23 +40,23 @@ const svg = d3.select("#viz")
 svg.append('g').classed('xAxis', true);
 svg.append('g').classed('yAxis', true);
 
-function update(data) {
-  const { x, y } = updateAxes(data);
-  updateBars(data, x, y);
-  updateLines(data, x, y);
-  updateLineLabels(data, x, y);
+function update(newData) {
+  const { x, y } = updateAxes(newData);
+  updateBars(newData, x, y);
+  updateLines(newData, x, y);
+  updateLineLabels(newData, x, y);
 }
 
-function updateAxes(data) {
+function updateAxes(newData) {
   const x = d3.scaleTime()
     .domain([
-      d3.min(data.map((x) => x.startDate)),
-      d3.max(data.map((x) => x.endDate))
+      d3.min(newData.map((x) => x.startDate)),
+      d3.max(newData.map((x) => x.endDate))
     ])
     .range([150, width - 50]);
 
   const y = d3.scaleBand()
-    .domain(data.map(d => d.id))
+    .domain(newData.map(d => d.id))
     .rangeRound([50, height - 100]);
 
   const xAxis = d3.axisBottom(x)
@@ -65,7 +71,7 @@ function updateAxes(data) {
     .call(xAxis);
 
   const yAxis = d3.axisLeft(y)
-    .tickFormat(milestoneId => _.find(data, x => x.id === milestoneId).title);
+    .tickFormat(milestoneId => _.find(newData, x => x.id === milestoneId).title);
 
   svg.selectAll('.yAxis')
     .attrs({
@@ -77,10 +83,10 @@ function updateAxes(data) {
   return { x, y };
 }
 
-function updateBars(data, x, y) {
+function updateBars(newData, x, y) {
   // JOIN
   const bars = svg.selectAll('.milestoneBar')
-    .data(data, d => d.id);
+    .data(newData, d => d.id);
 
   // ENTER + UPDATE
   bars.enter()
@@ -97,14 +103,25 @@ function updateBars(data, x, y) {
         milestoneId: d.id,
       }))
 
+  // Attach onClick handlers
+  svg.selectAll('.milestoneBar.editable')
+    .on('click', function(d) {
+      const index = _.findIndex(data, ms => ms.id === d.id);
+      if (index + 1 < data.length) {
+        data[index + 1].startDate = d.startDate
+      }
+      data = data.filter(ms => ms.id !== d.id);
+      update(data);
+    })
+
   // EXIT
   bars.exit().remove();
 }
 
-function updateLines(data, x, y) {
+function updateLines(newData, x, y) {
   // JOIN
   const lines = svg.selectAll(".endLine")
-    .data(data, d => d.id);
+    .data(newData, d => d.id);
 
   // ENTER + UPDATE
   lines.enter()
@@ -149,11 +166,11 @@ function updateLines(data, x, y) {
 
           // move all future milestone dates
           const delta = d3.event.x - x(d.endDate)
-          let milestoneIndex = data
+          let milestoneIndex = newData
             .map(d => d.id)
             .indexOf(milestoneId);
-          while (milestoneIndex + 1 < data.length) {
-            const nextMilestone = data[milestoneIndex + 1];
+          while (milestoneIndex + 1 < newData.length) {
+            const nextMilestone = newData[milestoneIndex + 1];
             d3.selectAll(`.endLine[milestoneId='${nextMilestone.id}']`)
               .attrs({
                 x1: x(nextMilestone.endDate) + delta,
@@ -172,6 +189,7 @@ function updateLines(data, x, y) {
             milestoneIndex += 1;
           }
         } else {
+          // TODO: visible error
           console.error("Milestones cannot be shorter than 1 day")
         }
       })
@@ -204,10 +222,10 @@ function updateLines(data, x, y) {
   lines.exit().remove();
 }
 
-function updateLineLabels(data, x, y) {
+function updateLineLabels(newData, x, y) {
   // JOIN
   const lineLabels = svg.selectAll("text.endLineLabel")
-    .data(data, d => d.id);
+    .data(newData, d => d.id);
 
   // ENTER + UPDATE
   lineLabels.enter()
