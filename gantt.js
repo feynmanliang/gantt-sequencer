@@ -46,9 +46,25 @@ bars.enter().append('rect')
   })
 bars.exit().remove();
 
+const lineLabels = svg.selectAll("text.endLineLabel")
+  .data(data)
+  .enter()
+  .append("text")
+  .attrs(d => ({
+    x: x(d.endDate),
+    y: y.range()[0] - 5,
+    'text-anchor': 'middle',
+    'font-family': 'Helvetica,Arial',
+    'font-size': '10px',
+    milestoneId: d.id,
+  }))
+  .text(d => moment(d.endDate).format('ddd MMM D'))
+  .classed({
+    endLineLabel: true,
+  });
+
 const lines = svg.selectAll("line.endLine")
   .data(data);
-
 lines.enter()
   .append("line")
   .call(d3.drag()
@@ -62,6 +78,13 @@ lines.enter()
             x1: d3.event.x,
             x2: d3.event.x
           });
+        // adjust line label
+        d3.selectAll(`text[milestoneId='${milestoneId}']`)
+          .attrs({
+            x: d3.event.x,
+          })
+          .text(d => moment(x.invert(d3.event.x)).format('ddd MMM D'));
+
         // adjust previous milestone bar's end position
         d3.selectAll(`rect[milestoneId='${milestoneId}']`)
           .attr('width', d3.event.x - x(d.startDate));
@@ -78,6 +101,11 @@ lines.enter()
               x1: x(nextMilestone.endDate) + delta,
               x2: x(nextMilestone.endDate) + delta,
             });
+          d3.selectAll(`text[milestoneId='${nextMilestone.id}']`)
+            .attrs({
+              x: x(nextMilestone.endDate) + delta,
+            })
+            .text(d => moment(x.invert(x(nextMilestone.endDate) + delta)).format('ddd MMM D'));
           d3.selectAll(`rect[milestoneId='${nextMilestone.id}']`)
             .attrs({
               x: x(nextMilestone.startDate) + delta,
