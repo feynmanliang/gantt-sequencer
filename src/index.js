@@ -27,8 +27,10 @@ const height = self.frameElement ? innerHeight : 600;
 
 const svg = d3.select("#viz")
   .append("svg")
-  .attr("width", width)
-  .attr("height", height);
+  .attrs({
+    width,
+    height
+  });
 svg.append('g')
   .attrs({
     'class': 'xAxis'
@@ -86,22 +88,18 @@ function updateBars(data, x, y) {
   const bars = svg.selectAll('rect.milestoneBar')
     .data(data);
 
-  // UPDATE
+  // ENTER + UPDATE
   bars.enter()
     .append('rect')
   .merge(bars)
-    .attrs({
-      x: (d) => x(d.startDate),
-      y: (d) => y(d.id),
+    .attrs(d => ({
+      x: x(d.startDate),
+      y: y(d.id),
       height: y.bandwidth(),
-      width: (d) => x(d.endDate) - x(d.startDate),
-      milestoneId: d => d.id,
+      width: x(d.endDate) - x(d.startDate),
+      milestoneId: d.id,
       class: 'milestoneBar'
-    })
-
-  // ENTER
-
-  // ENTER + UPDATE
+    }))
 
   // EXIT
   bars.exit().remove();
@@ -111,11 +109,6 @@ function updateLines(data, x, y) {
   // JOIN
   const lines = svg.selectAll("line.endLine")
     .data(data);
-
-
-  // UPDATE
-
-  // ENTER
 
   // ENTER + UPDATE
   lines.enter()
@@ -141,7 +134,9 @@ function updateLines(data, x, y) {
 
           // adjust previous milestone bar's end position
           d3.selectAll(`rect[milestoneId='${milestoneId}']`)
-            .attr('width', d3.event.x - x(d.startDate));
+            .attrs({
+              width: d3.event.x - x(d.startDate)
+            });
 
           // move all future milestone dates
           const delta = d3.event.x - x(d.endDate)
@@ -179,7 +174,7 @@ function updateLines(data, x, y) {
           .map(d => d.id)
           .indexOf(milestoneId);
 
-        // sate this milestone's enddate
+        // save this milestone's enddate
         data[milestoneIndex].endDate = x.invert(d3.event.x);
 
         // save all future milestone dates
@@ -190,6 +185,9 @@ function updateLines(data, x, y) {
 
           milestoneIndex += 1;
         }
+
+        // toggle update, since x axis may be redrawn
+        update(data);
       })
     )
     .attrs(d => ({
@@ -212,8 +210,6 @@ function updateLineLabels(data, x, y) {
   // JOIN
   const lineLabels = svg.selectAll("text.endLineLabel")
     .data(data);
-
-  // UPDATE
 
   // ENTER + UPDATE
   lineLabels.enter()
