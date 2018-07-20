@@ -1,4 +1,4 @@
-// `data` provided by data.js
+import 'bootstrap'
 import * as d3 from 'd3';
 import 'd3-selection-multi';
 import _ from 'lodash';
@@ -80,7 +80,7 @@ function updateAxes(data) {
 function updateBars(data, x, y) {
   // JOIN
   const bars = svg.selectAll('.milestoneBar')
-    .data(data);
+    .data(data, d => d.id);
 
   // ENTER + UPDATE
   bars.enter()
@@ -104,7 +104,7 @@ function updateBars(data, x, y) {
 function updateLines(data, x, y) {
   // JOIN
   const lines = svg.selectAll(".endLine")
-    .data(data);
+    .data(data, d => d.id);
 
   // ENTER + UPDATE
   lines.enter()
@@ -207,7 +207,7 @@ function updateLines(data, x, y) {
 function updateLineLabels(data, x, y) {
   // JOIN
   const lineLabels = svg.selectAll("text.endLineLabel")
-    .data(data);
+    .data(data, d => d.id);
 
   // ENTER + UPDATE
   lineLabels.enter()
