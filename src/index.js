@@ -12,12 +12,12 @@ window.exportData = () => console.log(data);
 window.addMilestone = () => {
   const newIndex = data.length;
   const startDate = _(data).map(ms => ms.endDate).max();
-  console.log(startDate)
   data.push({
     id: uuidv4(),
-    title: `M${newIndex}`,
+    title: `M${newIndex + 1}`,
     startDate,
-    endDate: moment(startDate) + moment.duration(7, 'day')
+    endDate: moment(startDate) + moment.duration(7, 'day'),
+    editable: true,
   });
   update(data);
 }
@@ -29,16 +29,10 @@ const svg = d3.select("#viz")
   .append("svg")
   .attrs({
     width,
-    height
+    height,
   });
-svg.append('g')
-  .attrs({
-    'class': 'xAxis'
-  })
-svg.append('g')
-  .attrs({
-    'class': 'yAxis'
-  })
+svg.append('g').classed('xAxis', true);
+svg.append('g').classed('yAxis', true);
 
 function update(data) {
   const { x, y } = updateAxes(data);
@@ -60,14 +54,14 @@ function updateAxes(data) {
     .rangeRound([50, height - 100]);
 
   const xAxis = d3.axisBottom(x)
-    .ticks(d3.timeWeek.every(1))
+    .ticks(6)
     .tickFormat(d3.timeFormat('%a %b %d'));
 
   svg.selectAll('g.xAxis')
     .attrs({
       transform: `translate(0, ${y.range()[1]})`,
-      class: 'xAxis'
     })
+    .transition()
     .call(xAxis);
 
   const yAxis = d3.axisLeft(y)
@@ -76,8 +70,8 @@ function updateAxes(data) {
   svg.selectAll('g.yAxis')
     .attrs({
       transform: `translate(${x.range()[0]}, 0)`,
-      class: 'yAxis'
     })
+    .transition()
     .call(yAxis);
 
   return { x, y };
@@ -92,14 +86,16 @@ function updateBars(data, x, y) {
   bars.enter()
     .append('rect')
   .merge(bars)
-    .attrs(d => ({
-      x: x(d.startDate),
-      y: y(d.id),
-      height: y.bandwidth(),
-      width: x(d.endDate) - x(d.startDate),
-      milestoneId: d.id,
-      class: 'milestoneBar'
-    }))
+    .classed('milestoneBar', true)
+    .classed('editable', d => d.editable)
+    .transition()
+      .attrs(d => ({
+        x: x(d.startDate),
+        y: y(d.id),
+        height: y.bandwidth(),
+        width: x(d.endDate) - x(d.startDate),
+        milestoneId: d.id,
+      }))
 
   // EXIT
   bars.exit().remove();
@@ -190,17 +186,16 @@ function updateLines(data, x, y) {
         update(data);
       })
     )
-    .attrs(d => ({
-      x1: x(d.endDate),
-      y1: y.range()[0],
-      x2: x(d.endDate),
-      y2: y.range()[1],
-      "stroke-width": 3,
-      "stroke-dasharray": "10,10",
-      stroke: "black",
-      milestoneId: d.id,
-      class: 'endLine',
-    }));
+    .classed('endLine', true)
+    .classed('editable', d => d.editable)
+    .transition()
+      .attrs(d => ({
+        x1: x(d.endDate),
+        y1: y.range()[0],
+        x2: x(d.endDate),
+        y2: y.range()[1],
+        milestoneId: d.id,
+      }));
 
   // EXIT
   lines.exit().remove();
@@ -215,14 +210,12 @@ function updateLineLabels(data, x, y) {
   lineLabels.enter()
     .append("text")
   .merge(lineLabels)
+    .classed('endLineLabel', true)
+    .transition()
     .attrs(d => ({
       x: x(d.endDate),
       y: y.range()[0] - 5,
-      'text-anchor': 'middle',
-      'font-family': 'Helvetica,Arial',
-      'font-size': '10px',
       milestoneId: d.id,
-      class: 'endLineLabel',
     }))
     .text(d => moment(d.endDate).format('ddd MMM D'));
 
