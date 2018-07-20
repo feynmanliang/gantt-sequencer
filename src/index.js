@@ -1,15 +1,32 @@
 // `data` provided by data.js
 import * as d3 from 'd3';
 import 'd3-selection-multi';
+import _ from 'lodash';
 import moment from 'moment';
-import * as _ from 'lodash';
+import uuidv4 from 'uuid/v4';
 
 import data from './data';
+import './styles/viz.css';
 
-const width = self.frameElement ? 800 : innerWidth;
-const height = self.frameElement ? 500 : innerWidth;
+window.exportData = () => console.log(data);
+window.addMilestone = () => {
+  const newIndex = data.length;
+  const startDate = _(data).map(ms => ms.endDate).max();
+  console.log(startDate)
+  data.push({
+    id: uuidv4(),
+    title: `M${newIndex}`,
+    startDate,
+    endDate: startDate + moment.duration(7, 'day')
+  });
+  console.log(data[data.length-1])
+  // TODO: rebind to redraw
+}
 
-const svg = d3.select("body")
+const width = self.frameElement ? innerWidth : 1000;
+const height = self.frameElement ? innerHeight : 600;
+
+const svg = d3.select("#viz")
   .append("svg")
   .attr("width", width)
   .attr("height", height);
@@ -19,11 +36,11 @@ const x = d3.scaleTime()
     d3.min(data.map((x) => x.startDate)),
     d3.max(data.map((x) => x.endDate))
   ])
-  .range([150, 700]);
+  .range([150, width - 50]);
 
 const y = d3.scaleBand()
   .domain(data.map(d => d.id))
-  .rangeRound([50, 400]);
+  .rangeRound([50, height - 100]);
 
 
 const xAxis = d3.axisBottom(x)
@@ -63,11 +80,9 @@ const lineLabels = svg.selectAll("text.endLineLabel")
     'font-family': 'Helvetica,Arial',
     'font-size': '10px',
     milestoneId: d.id,
+    class: 'endLineLabel',
   }))
-  .text(d => moment(d.endDate).format('ddd MMM D'))
-  .classed({
-    endLineLabel: true,
-  });
+  .text(d => moment(d.endDate).format('ddd MMM D'));
 
 const lines = svg.selectAll("line.endLine")
   .data(data);
@@ -153,7 +168,6 @@ lines.enter()
     "stroke-dasharray": "10,10",
     stroke: "black",
     milestoneId: d => d.id,
-  }).classed({
-    endLine: true,
+    class: 'endLine',
   });
 lines.exit().remove();

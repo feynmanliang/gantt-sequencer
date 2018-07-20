@@ -5,6 +5,7 @@ const CleanWebpackPlugin = require('clean-webpack-plugin');
 module.exports = {
   entry: './src/index.js',
   devtool: 'inline-source-map',
+  mode: process.env.ENV || 'development',
   module: {
     rules: [
       {
@@ -15,7 +16,14 @@ module.exports = {
           options: {
             presets: ['@babel/preset-env']
           }
-        }
+        },
+      },
+      {
+        test: /\.css$/,
+        use: [
+          "style-loader",
+          "css-loader"
+        ]
       }
     ]
   },
@@ -24,7 +32,8 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: './src/index.html',
       filename: 'index.html',
-      inject: 'body'
+      inject: 'body',
+      title: 'Gantt Sequencer'
     })
   ],
   output: {
