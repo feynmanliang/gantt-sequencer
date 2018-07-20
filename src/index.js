@@ -19,7 +19,6 @@ window.addMilestone = () => {
     startDate,
     endDate: moment(startDate) + moment.duration(7, 'day')
   });
-  console.log(data[data.length-1])
   update(data);
 }
 
@@ -48,11 +47,11 @@ function update(data) {
 
 function updateAxes(data) {
   const x = d3.scaleTime()
-  .domain([
-    d3.min(data.map((x) => x.startDate)),
-    d3.max(data.map((x) => x.endDate))
-  ])
-  .range([150, width - 50]);
+    .domain([
+      d3.min(data.map((x) => x.startDate)),
+      d3.max(data.map((x) => x.endDate))
+    ])
+    .range([150, width - 50]);
 
   const y = d3.scaleBand()
     .domain(data.map(d => d.id))
@@ -88,7 +87,9 @@ function updateBars(data, x, y) {
     .data(data);
 
   // UPDATE
-  bars.enter().append('rect')
+  bars.enter()
+    .append('rect')
+  .merge(bars)
     .attrs({
       x: (d) => x(d.startDate),
       y: (d) => y(d.id),
@@ -119,6 +120,7 @@ function updateLines(data, x, y) {
   // ENTER + UPDATE
   lines.enter()
     .append("line")
+  .merge(lines)
     .call(d3.drag()
       .on('drag', function (d) {
         const milestoneId = d3.select(this).attr('milestoneId');
@@ -216,6 +218,7 @@ function updateLineLabels(data, x, y) {
   // ENTER + UPDATE
   lineLabels.enter()
     .append("text")
+  .merge(lineLabels)
     .attrs(d => ({
       x: x(d.endDate),
       y: y.range()[0] - 5,
